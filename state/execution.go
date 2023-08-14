@@ -110,47 +110,14 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	return state.MakeBlock(height, txs, commit, evidence, proposerAddr)
 }
 
-func overrideIncorrectLastResultsHash(block *types.Block) {
-	if block.Height != 15138725 && block.Height != 15138726 {
+func (_ *BlockExecutor) OverrideBypassValidation(state State, block *types.Block) {
+	if block.Height > 15138725+20 {
 		return
 	}
 
-	if block.LastResultsHash[0] != 0x6d {
-		return
-	}
-
-	block.LastResultsHash[0] = 0x15
-	block.LastResultsHash[1] = 0x06
-	block.LastResultsHash[2] = 0xDC
-	block.LastResultsHash[3] = 0x59
-	block.LastResultsHash[4] = 0x95
-	block.LastResultsHash[5] = 0x4C
-	block.LastResultsHash[6] = 0x01
-	block.LastResultsHash[7] = 0xF1
-	block.LastResultsHash[8] = 0x6B
-	block.LastResultsHash[9] = 0xD2
-	block.LastResultsHash[10] = 0x34
-	block.LastResultsHash[11] = 0x7D
-	block.LastResultsHash[12] = 0xFD
-	block.LastResultsHash[13] = 0xD1
-	block.LastResultsHash[14] = 0xA1
-	block.LastResultsHash[15] = 0x83
-	block.LastResultsHash[16] = 0xC6
-	block.LastResultsHash[17] = 0xC8
-	block.LastResultsHash[18] = 0x03
-	block.LastResultsHash[19] = 0x26
-	block.LastResultsHash[20] = 0xF7
-	block.LastResultsHash[21] = 0x3C
-	block.LastResultsHash[22] = 0xAE
-	block.LastResultsHash[23] = 0xA4
-	block.LastResultsHash[24] = 0x34
-	block.LastResultsHash[25] = 0x47
-	block.LastResultsHash[26] = 0x11
-	block.LastResultsHash[27] = 0xB9
-	block.LastResultsHash[28] = 0x59
-	block.LastResultsHash[29] = 0x82
-	block.LastResultsHash[30] = 0xC0
-	block.LastResultsHash[31] = 0x94
+	block.AppHash = state.AppHash
+	block.LastResultsHash = state.LastResultsHash
+	block.ValidatorsHash = state.Validators.Hash()
 }
 
 // ValidateBlock validates the given block against the given state.
@@ -158,7 +125,7 @@ func overrideIncorrectLastResultsHash(block *types.Block) {
 // Validation does not mutate state, but does require historical information from the stateDB,
 // ie. to verify evidence from a validator at an old height.
 func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) error {
-	overrideIncorrectLastResultsHash(block)
+	blockExec.OverrideBypassValidation(state, block)
 	err := validateBlock(state, block)
 	if err != nil {
 		return err
@@ -175,7 +142,7 @@ func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) e
 func (blockExec *BlockExecutor) ApplyBlock(
 	state State, blockID types.BlockID, block *types.Block,
 ) (State, int64, error) {
-	overrideIncorrectLastResultsHash(block)
+	blockExec.OverrideBypassValidation(state, block)
 
 	if err := validateBlock(state, block); err != nil {
 		return state, 0, ErrInvalidBlock(err)

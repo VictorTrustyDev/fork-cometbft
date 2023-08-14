@@ -392,6 +392,8 @@ FOR_LOOP:
 
 			bcR.pool.PopRequest()
 
+			bcR.blockExec.OverrideBypassValidation(state, first)
+
 			// TODO: batch saves so we dont persist to disk every block
 			bcR.store.SaveBlock(first, firstParts, second.LastCommit)
 
