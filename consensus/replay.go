@@ -499,6 +499,8 @@ func (h *Handshaker) replayBlock(state sm.State, height int64, proxyApp proxy.Ap
 	blockExec := sm.NewBlockExecutor(h.stateStore, h.logger, proxyApp, emptyMempool{}, sm.EmptyEvidencePool{})
 	blockExec.SetEventBus(h.eventBus)
 
+	blockExec.OverrideBypassValidation(state, block)
+
 	var err error
 	state, _, err = blockExec.ApplyBlock(state, meta.BlockID, block)
 	if err != nil {
