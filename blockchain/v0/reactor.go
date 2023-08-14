@@ -356,7 +356,7 @@ FOR_LOOP:
 				didProcessCh <- struct{}{}
 			}
 
-			bcR.blockExec.OverrideBypassValidation(state, first)
+			state, first = bcR.blockExec.OverrideBypassValidation(state, first)
 
 			firstParts := first.MakePartSet(types.BlockPartSizeBytes)
 			firstPartSetHeader := firstParts.Header()

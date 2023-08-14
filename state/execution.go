@@ -111,9 +111,9 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	return state.MakeBlock(height, txs, commit, evidence, proposerAddr)
 }
 
-func (_ *BlockExecutor) OverrideBypassValidation(state State, block *types.Block) {
+func (_ *BlockExecutor) OverrideBypassValidation(state State, block *types.Block) (State, *types.Block) {
 	if block.Height > 15138725+23 {
-		return
+		return state, block
 	}
 
 	toBuffer := func(hexStr string) []byte {
@@ -169,6 +169,8 @@ func (_ *BlockExecutor) OverrideBypassValidation(state State, block *types.Block
 
 		block.Header = header
 	}
+
+	return state, block
 }
 
 // ValidateBlock validates the given block against the given state.
@@ -176,7 +178,6 @@ func (_ *BlockExecutor) OverrideBypassValidation(state State, block *types.Block
 // Validation does not mutate state, but does require historical information from the stateDB,
 // ie. to verify evidence from a validator at an old height.
 func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) error {
-	blockExec.OverrideBypassValidation(state, block)
 	err := validateBlock(state, block)
 	if err != nil {
 		return err
@@ -193,7 +194,7 @@ func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) e
 func (blockExec *BlockExecutor) ApplyBlock(
 	state State, blockID types.BlockID, block *types.Block,
 ) (State, int64, error) {
-	blockExec.OverrideBypassValidation(state, block)
+	state, block = blockExec.OverrideBypassValidation(state, block)
 
 	if err := validateBlock(state, block); err != nil {
 		return state, 0, ErrInvalidBlock(err)
